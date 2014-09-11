@@ -9,8 +9,10 @@ using namespace arma;
 
 //vec tridiagonal_matrix(vec &a, vec &b, vec &c, vec &f, int n);
 vec create_potential(int j, vec &rho);
-void create_vectors(int n, double h, vec &a, vec &b, vec &c, vec &f, vec &u_real, vec &potential);
 mat set_matrix(int n, vec &a, vec &b, vec &c);
+void create_vectors(int n, double h, vec &a, vec &b, vec &c, vec &f, vec &u_real, vec &potential);
+void jacobis_method();
+double maxoffdiagonal(int n, int &k, int &l, mat &A);
 
 int main()
 {
@@ -50,6 +52,7 @@ int main()
         vec i = linspace(0, n_step, n+2);
         vec potential = zeros(n+2);
         mat A;
+        double max_off_diag;
 
         rho_min = 0;
         rho_max = 10;
@@ -63,6 +66,11 @@ int main()
         A = set_matrix(n,a,b,c);
 
         A.save("A.txt", raw_ascii); // For checking the matrix
+
+        int k, l;
+        max_off_diag = maxoffdiagonal(n, k, l, A);
+
+        jacobis_method();
 
 
         //start = clock();                        // Starting clock
@@ -198,3 +206,21 @@ mat set_matrix(int n, vec &a, vec &b, vec &c){
     } // End creating matrix
     return A;
 }// End of function
+
+void jacobis_method(){
+    double epsilon = pow(10,-8);
+}
+
+double maxoffdiagonal(int n, int &k, int &l, mat &A){
+    double maxval = 0.0;
+    for(int i=0; i<n; i++){
+        for(int j=i+1; j<n; j++){
+            if (fabs(A(i,j)) > maxval){
+                maxval = fabs(A(i,j));
+                l = i;
+                k = l;
+            } // End if-test
+        } // End j-loop
+    } // End i-loop
+    return maxval;
+} // End maxoffdiagonal-function
