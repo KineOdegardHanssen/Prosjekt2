@@ -10,19 +10,20 @@ using namespace arma;
 //vec tridiagonal_matrix(vec &a, vec &b, vec &c, vec &f, int n);
 vec create_potential(int j, vec &rho);
 void create_vectors(int n, double h, vec &a, vec &b, vec &c, vec &f, vec &u_real, vec &potential);
-void armadillo_solve(int n, vec &a, vec &b, vec &c, vec &f, vec &u_arma);
+mat set_matrix(int n, vec &a, vec &b, vec &c);
 
 int main()
 {
     int n_exponent, n, j;
     double start, finish, operation_time, relative_error, h, rho_min, rho_max, n_step,
            start_arma, finish_arma, operation_time_arma, relative_error_arma;
-    /*
-    // Creating a file to write the time and error to
-    ofstream timeanderror;
-    timeanderror.open("timeanderror.dat");
-    timeanderror.setf(ios::scientific);         // Forcing scientific notation
 
+
+    // Creating a file to write the time and error to
+    ofstream Amatrix;
+    Amatrix.open("A.dat");
+    //Amatrix.setf(ios::scientific);         // Forcing scientific notation
+    /*
     // Creating a file to write the time and error to for armadillo solving
     ofstream timeanderror_arma;
     timeanderror_arma.open("timeanderror_arma.dat");
@@ -35,7 +36,7 @@ int main()
     */
 
     // Creating for-loop to try the solving mechanism for different size matrices
-    for(n_exponent=1; n_exponent < 4; n_exponent++){
+    for(n_exponent=1; n_exponent < 2; n_exponent++){
         // vectors of length n-1: Set n in program to n=n-1
 
         n = pow(10,n_exponent);                 // Dimension of matrix
@@ -48,24 +49,29 @@ int main()
         vec rho = zeros(n+2);
         vec i = linspace(0, n_step, n+2);
         vec potential = zeros(n+2);
+        mat A;
 
         rho_min = 0;
         rho_max = 10;
         h = (rho_max-rho_min)/n_step;
         rho = i*h;
-        //cout << rho;
+
         potential = create_potential(j, rho);
-        cout << potential;
 
         create_vectors(n, h, a, b, c, f, u_real, potential);  // Creating vectors for the tridiagonal matrix system
 
-        start = clock();                        // Starting clock
+        A = set_matrix(n,a,b,c);
+
+        A.save("A.txt", raw_ascii); // For checking the matrix
+
+
+        //start = clock();                        // Starting clock
         /*u = tridiagonal_matrix(a, b, c, f, n);  // Solving the tridiagonal matrix problem
         finish = clock();                       // Ending clock
         operation_time = (finish - start)/(double) CLOCKS_PER_SEC;  // Calculating time in seconds*/
 
-        u_short = u.subvec(1,n);                // Defining u-vector with non-zero elements
-        u_real_short = u_real.subvec(1,n);      // Defining u_real-vector with non-zero elements
+        //u_short = u.subvec(1,n);                // Defining u-vector with non-zero elements
+        //u_real_short = u_real.subvec(1,n);      // Defining u_real-vector with non-zero elements
         //relative_error = log10(max(abs((u_real_short-u_short)/u_real_short)));  // Calculating relative error
         /*
         // Solving problem using LU-decomposition, and printing u-vector to file, if the matrix is small
@@ -169,17 +175,12 @@ void create_vectors(int n, double h, vec &a, vec &b, vec &c, vec &f, vec &u_real
     } // End vector value assignment
 } // End the create_vectors-function
 
-void armadillo_solve(int n, vec &a, vec &b, vec &c, vec &f, vec &u_arma){
+mat set_matrix(int n, vec &a, vec &b, vec &c){
+
+    // Can merge this function with create_vector when the code is running
 
     mat A(n,n);                 // Create full matris from tridiagonal matrix vectors
     A.zeros();                  // Fill matrix with zeros
-
-    u_arma.resize(n);           // Create solution vector
-    u_arma.zeros();             // Fill elements of solution vector with zeros
-
-    vec f_arma;                 // Create vector f in the problem Au = f
-    f_arma.resize(n);           // Size vector f to the right number of elements
-    f_arma = f.subvec(1,n);      // Fill elements of f_new with elements of f
 
     // Assign values to elements of matrix
     for (int i = 0; i<n; i++){
@@ -194,9 +195,6 @@ void armadillo_solve(int n, vec &a, vec &b, vec &c, vec &f, vec &u_arma){
             A(i,i+1) = c[i+1];
             A(i,i-1) = a[i+1];
         } // End if statements
-        u_arma = solve(A,f_arma);
     } // End creating matrix
-
-
-
-}// End of armadillo_solve-function
+    return A;
+}// End of function
