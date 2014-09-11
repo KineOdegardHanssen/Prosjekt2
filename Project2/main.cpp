@@ -212,6 +212,7 @@ void jacobis_method(){
 }
 
 double maxoffdiagonal(int n, int &k, int &l, mat &A){
+    // In his lecture notes, MHJ said that this could be done more elegantly
     double maxval = 0.0;
     for(int i=0; i<n; i++){
         for(int j=i+1; j<n; j++){
