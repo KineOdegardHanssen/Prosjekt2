@@ -38,9 +38,11 @@ int main()
     A = set_matrix(n, h, potential);
     A.save("A.txt", raw_ascii);             // Saving matrix to be able to have a look at it
 
-    // Using Jacobi's method to solve the eigenvalue problem
+    // Using Jacobi's method to diagonalise matrix A
     jacobis_method(n, A, R);
     R.save("R.txt", raw_ascii);
+    A.save("D.txt", raw_ascii);
+    vec eigenvalues = diagvec(A);           // Extracting the eigenvalues of the system from the diagonalised matrix
 
     return 0;
 
@@ -144,7 +146,7 @@ void rotate(int n, int &k, int &l, mat &A, mat &R, double &max_off_diag){
 
 double max_offdiagonal(int n, int &k, int &l, mat &A){
     double max_value = 0.0;
-    for(int i=1; i<n; i++){
+    for(int i=0; i<n; i++){
         for(int j=i+1; j<n; j++){
             if(fabs(A(i,j)) > max_value){
                 max_value = fabs(A(i,j));
