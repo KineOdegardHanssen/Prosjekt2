@@ -35,8 +35,6 @@ int main()
 
     // Calling functions to create matrix
     create_rho_and_potential(n, h, rho_min, rho, potential);    // Finding the potential at each point
-    cout << rho << endl << endl;
-    cout << potential << endl;
     A = set_matrix(n, h, potential);
     A.save("A.txt", raw_ascii);             // Saving matrix to be able to have a look at it
 
@@ -151,7 +149,7 @@ double max_offdiagonal(int n, int &k, int &l, mat &A){
             if(fabs(A(i,j)) > max_value){
                 max_value = fabs(A(i,j));
                 l = i;
-                k = l;
+                k = j;
             } // End if-test
         } // End j-loop
     } // End i-loop
