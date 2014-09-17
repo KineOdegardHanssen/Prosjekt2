@@ -43,15 +43,36 @@ int main()
     R.save("R.txt", raw_ascii);
     A.save("D.txt", raw_ascii);
     vec eigenvalues = diagvec(A);           // Extracting the eigenvalues of the system from the diagonalised matrix
+    eigenvalues = sort(eigenvalues);        // Sorting the eigenvalues
+    cout << eigenvalues << endl;
 
     return 0;
 
 } // End of program
 
 void create_rho_and_potential(int n, double h, double rho_min,  vec &rho, vec &potential){
+    int particlenumber;
+    double omegar;
+
+    // Deciding which kind of potential should be made in this function
+    cout << "Select one (1) or two (2) particle potential: ";
+    cin >> particlenumber;
+    if(particlenumber == 2){
+        cout << "Read in omega_r value: ";
+        cin >> omegar;
+    }else if(particlenumber != 1 && particlenumber != 2){
+        cout << "Error: Wrong particle number. Try again: ";
+        cin >> particlenumber;
+    }
+
+    // Creating rho and the potential, depending on which system was chosen
     for(int i = 1; i < n+2; i++){
         rho[i] = rho_min + i*h;
-        potential[i] = rho[i]*rho[i];
+        if(particlenumber == 1){
+            potential[i] = rho[i]*rho[i];
+        }else if(particlenumber == 2){
+            potential[i] = omegar*omegar * rho[i]*rho[i] + 1/rho[i];
+        }   // End if-statement
     }   // End for-loop
 }   // End create_potential-function
 
