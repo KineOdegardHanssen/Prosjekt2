@@ -38,13 +38,15 @@ int main()
     A = set_matrix(n, h, potential);
     A.save("A.txt", raw_ascii);             // Saving matrix to be able to have a look at it
 
+    //eigs_sym(A)
+
     // Using Jacobi's method to diagonalise matrix A
     jacobis_method(n, A, R);
     R.save("R.txt", raw_ascii);
     A.save("D.txt", raw_ascii);
     vec eigenvalues = diagvec(A);           // Extracting the eigenvalues of the system from the diagonalised matrix
     eigenvalues = sort(eigenvalues);        // Sorting the eigenvalues
-    cout << eigenvalues << endl;
+    cout << eigenvalues.subvec(0,2) << endl;
 
     return 0;
 
@@ -117,7 +119,7 @@ void jacobis_method(int n, mat &A, mat &R){
 void rotate(int n, int &k, int &l, mat &A, mat &R, double &max_off_diag){
     int i;
     double c, s, t, tau;
-    double all, alk, akk, ail, aik, rik, ril;
+    double all, akl, akk, ail, aik, rik, ril;
 
     // Finding values of the trigonomical functions
     if (max_off_diag !=0){
@@ -127,7 +129,7 @@ void rotate(int n, int &k, int &l, mat &A, mat &R, double &max_off_diag){
         }else{
             t = 1.0/(tau+sqrt(1+tau*tau));
         }   // Ending if-statement
-        c = 1/(1+t*t);
+        c = 1/sqrt(1+t*t);
         s = t*c;
     }else{
         c = 1.0;
@@ -136,13 +138,13 @@ void rotate(int n, int &k, int &l, mat &A, mat &R, double &max_off_diag){
 
     all = A(l,l);
     akk = A(k,k);
-    alk = A(k,l);
+    akl = A(k,l);
 
     // Changing the matrix elements with indices k and l
-    A(l,l) = all*c*c + 2*alk*c*s + akk*s*s;
-    A(k,k) = akk*c*c - 2*alk*c*s + all*s*s;
-    A(k,l) = 0;
-    A(l,k) = 0;
+    A(l,l) = all*c*c + 2.0*akl*c*s + akk*s*s;
+    A(k,k) = akk*c*c - 2.0*akl*c*s + all*s*s;
+    A(k,l) = 0.;
+    A(l,k) = 0.;
 
     for (i=0; i<n; i++){
         if (i !=k && i !=l ){
