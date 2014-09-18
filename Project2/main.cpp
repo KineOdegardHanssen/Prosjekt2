@@ -38,13 +38,15 @@ int main()
     create_rho_and_potential(n, h, rho_min, rho, potential);    // Finding the potential at each point
     A = set_matrix(n, h, potential);
     A.save("A.txt", raw_ascii);             // Saving matrix to be able to have a look at it
+    //vec eigenvalues_armadillo = eigs_sym(A,n);
+
 
     // Using Jacobi's method to diagonalise matrix A
     jacobis_method(n, A, R);
     R.save("R.txt", raw_ascii);
     A.save("D.txt", raw_ascii);
     vec eigenvalues = diagvec(A);           // Extracting the eigenvalues of the system from the diagonalised matrix
-    uvec indices = find(eigenvalues <= 11 ); // Finding the indices of the three lowest eigenvalues in unordered array
+    uvec indices = find(eigenvalues <= 11 ); // Finding the indices of the three lowest eigenvalues in the unsorted array
     cout << "Indices of the three smallest eigenvalues in random order:" << endl;
     cout << indices << endl;
     cout << "Corresponding eigenvalues:" << endl;
@@ -56,6 +58,8 @@ int main()
 
     eigenvalues.save("eigenvalues.txt", raw_ascii);
     cout << eigenvalues.subvec(0,2) << endl;// Cout to keep track of the values without having to open file
+
+
 
     return 0;
  
