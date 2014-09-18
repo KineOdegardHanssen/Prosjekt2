@@ -9,15 +9,17 @@ using namespace arma;
 
 // Functions, in the order of which they are used
 mat     set_matrix(int n, double h, vec &potential);
-void    create_rho_and_potential(int n, double h, double rho_min, vec &rho, vec &potential);
+int     create_rho_and_potential(int n, double h, double rho_min, vec &rho, vec &potential);
 void    jacobis_method(int n, mat &A, mat &R);
 double  max_offdiagonal(int n, int &k, int &l, mat &A);
 void    rotate(int n, int &k, int &l, mat &A, mat &R, double &max_off_diag);
 
 int main()
 {
-    double h, rho_min, rho_max;
-    int n;
+    double h, rho_min, rho_max,
+           start_arma, end_arma, operation_time_arma,
+           start_jacobi, end_jacobi, operation_time_jacobi;
+    int n, check;
 
     // Deciding on matrix and vector sizes and end points
     rho_min = 0.;
@@ -33,39 +35,65 @@ int main()
     vec potential = zeros(n+2);             // Vector saving the potential
     mat R = eye(n,n);                       // Creating matrix R, which stores the eigenvectors of A
 
+    // Finding the potential at each point
+    check = create_rho_and_potential(n, h, rho_min, rho, potential);
+    if(check == 1){                         // Checking if correct number of particles was chosen
+        cout << "Session aborted: Invalid number of particles." << endl;
+        return 1;
+    }   // End if-statement
 
-    // Calling functions to create matrix
-    create_rho_and_potential(n, h, rho_min, rho, potential);    // Finding the potential at each point
-    A = set_matrix(n, h, potential);
+    A = set_matrix(n, h, potential);        // Creating matrix A
     A.save("A.txt", raw_ascii);             // Saving matrix to be able to have a look at it
-    //vec eigenvalues_armadillo = eigs_sym(A,n);
 
+    // Finding solution to eigenvalue problem using Armadillo
+    vec eigenvalues_armadillo(n);
+    mat eigenvectors_armadillo(n,n);
+    start_arma = clock();                   // Finding the time it takes to find eigenvectors with armadillo
+    eig_sym(eigenvalues_armadillo,eigenvectors_armadillo, A);
+    end_arma = clock();
+
+    operation_time_arma = (end_arma - start_arma)/(double) CLOCKS_PER_SEC;
+    cout << endl << "Computation time to solve eigenvalue problem using Armadillo: "
+         << operation_time_arma << endl;
+
+    // Printing eigenvalues obtained using Armadillo to terminal
+    cout << "Eigenvalues as found by Armadillo: "<< endl << eigenvalues_armadillo.subvec(0,2) << endl;
 
     // Using Jacobi's method to diagonalise matrix A
+    cout << "JACOBI'S METHOD" << endl;
+
+    start_jacobi = clock();
     jacobis_method(n, A, R);
-    R.save("R.txt", raw_ascii);
-    A.save("D.txt", raw_ascii);
-    vec eigenvalues = diagvec(A);           // Extracting the eigenvalues of the system from the diagonalised matrix
-    uvec indices = find(eigenvalues <= 11 ); // Finding the indices of the three lowest eigenvalues in the unsorted array
-    cout << "Indices of the three smallest eigenvalues in random order:" << endl;
-    cout << indices << endl;
-    cout << "Corresponding eigenvalues:" << endl;
-    cout << eigenvalues(indices(0)) << endl;
-    cout << eigenvalues(indices(1)) << endl;
-    cout << eigenvalues(indices(2))<< endl << endl;
+    end_jacobi = clock();
 
-    eigenvalues = sort(eigenvalues);        // Sorting the eigenvalues
+    operation_time_jacobi = (end_jacobi - start_jacobi)/(double) CLOCKS_PER_SEC;
+    cout << "Computation time to solve eigenvalue problem using Jacobi's method: "
+         << operation_time_jacobi << endl << endl;
 
-    eigenvalues.save("eigenvalues.txt", raw_ascii);
-    cout << eigenvalues.subvec(0,2) << endl;// Cout to keep track of the values without having to open file
+    A.save("D.txt", raw_ascii);             // Saving diagonalised matrix
+    R.save("R.txt", raw_ascii);             // Saving matrix storing eigenvalues
 
+    // Extracting the eigenvalues of the system from the diagonalised matrix
+    vec eigenvalues = diagvec(A);
+    vec eig_sorted = sort(eigenvalues);
 
+    // Finding the indices of the three smallest eigenvalues in the original vector
+    // This is necessary in order to access the corresponding column vector in the R matrix
+    uvec indices = find(eigenvalues <= eig_sorted(2));
+
+    // Printing eigenvalues with their indices to terminal
+    cout << "Indices of the three smallest eigenvalues in random order: " << endl
+         << indices << endl;
+    cout << "Corresponding eigenvalues: " << endl << setprecision(7)
+         << eigenvalues(indices(0)) << endl
+         << eigenvalues(indices(1)) << endl
+         << eigenvalues(indices(2)) << endl << endl;
 
     return 0;
  
 } // End of program
 
-void create_rho_and_potential(int n, double h, double rho_min,  vec &rho, vec &potential){
+int create_rho_and_potential(int n, double h, double rho_min,  vec &rho, vec &potential){
     int particlenumber;
     double omegar;
 
@@ -78,7 +106,12 @@ void create_rho_and_potential(int n, double h, double rho_min,  vec &rho, vec &p
     }else if(particlenumber != 1 && particlenumber != 2){
         cout << "Error: Wrong particle number. Try again: ";
         cin >> particlenumber;
-    }
+
+        // Aborting session if invalid number of particles has been chosen twice
+        if(particlenumber != 1 && particlenumber != 2){
+            return 1;
+        } // End second if-statement
+    } // End if-statement
 
     // Creating rho and the potential, depending on which system was chosen
     for(int i = 1; i < n+2; i++){
@@ -89,6 +122,7 @@ void create_rho_and_potential(int n, double h, double rho_min,  vec &rho, vec &p
             potential[i] = omegar*omegar * rho[i]*rho[i] + 1/rho[i];
         }   // End if-statement
     }   // End for-loop
+    return 0;
 }   // End create_potential-function
 
 mat set_matrix(int n, double h, vec &potential){
@@ -109,7 +143,7 @@ mat set_matrix(int n, double h, vec &potential){
 void jacobis_method(int n, mat &A, mat &R){
     int k, l;
     int iteration_number = 0;
-    double max_iteration_number = n*n*n;      // We stop diagonalising the matrix after this to not kill something
+    double max_iteration_number = n*n*n;    // We stop diagonalising the matrix after this to not kill something
     double max_off_diag;                    // The maximum value of all off-diagonal terms
     double epsilon = pow(10,-8);            // If the maximum off-diagonal value is smaller than this,
                                             // we consider the matrix diagonalised
@@ -122,7 +156,7 @@ void jacobis_method(int n, mat &A, mat &R){
         iteration_number++;
     }   // End while-loop
 
-    cout << "Iteration number: " << iteration_number - 1 << endl << endl;
+    cout << "Iteration number: " << iteration_number - 1 << endl;
 
     // Print out error in case matrix doesn't get diagonalised and solution will not be correct
     if(fabs(max_off_diag) > epsilon && iteration_number >= max_iteration_number){
