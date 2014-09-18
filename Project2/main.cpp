@@ -38,15 +38,14 @@ int main()
     A = set_matrix(n, h, potential);
     A.save("A.txt", raw_ascii);             // Saving matrix to be able to have a look at it
 
-    //eigs_sym(A)
-
     // Using Jacobi's method to diagonalise matrix A
     jacobis_method(n, A, R);
     R.save("R.txt", raw_ascii);
     A.save("D.txt", raw_ascii);
     vec eigenvalues = diagvec(A);           // Extracting the eigenvalues of the system from the diagonalised matrix
     eigenvalues = sort(eigenvalues);        // Sorting the eigenvalues
-    cout << eigenvalues.subvec(0,2) << endl;
+    eigenvalues.save("eigenvalues.txt", raw_ascii);
+    cout << eigenvalues.subvec(0,2) << endl;// Cout to keep track of the values without having to open file
 
     return 0;
 
@@ -96,7 +95,7 @@ mat set_matrix(int n, double h, vec &potential){
 void jacobis_method(int n, mat &A, mat &R){
     int k, l;
     int iteration_number = 0;
-    double max_iteration_number = n*n;      // We stop diagonalising the matrix after this to not kill something
+    double max_iteration_number = n*n*n;      // We stop diagonalising the matrix after this to not kill something
     double max_off_diag;                    // The maximum value of all off-diagonal terms
     double epsilon = pow(10,-8);            // If the maximum off-diagonal value is smaller than this,
                                             // we consider the matrix diagonalised
@@ -109,8 +108,10 @@ void jacobis_method(int n, mat &A, mat &R){
         iteration_number++;
     }   // End while-loop
 
+    cout << "Iteration number: " << iteration_number - 1 << endl << endl;
+
     // Print out error in case matrix doesn't get diagonalised and solution will not be correct
-    if(fabs(max_off_diag) > epsilon && iteration_number == max_iteration_number){
+    if(fabs(max_off_diag) > epsilon && iteration_number >= max_iteration_number){
         cout << "Matrix was not succesfully diagonalised." << endl;
     }   // End if-statement
 
