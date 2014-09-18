@@ -33,6 +33,7 @@ int main()
     vec potential = zeros(n+2);             // Vector saving the potential
     mat R = eye(n,n);                       // Creating matrix R, which stores the eigenvectors of A
 
+
     // Calling functions to create matrix
     create_rho_and_potential(n, h, rho_min, rho, potential);    // Finding the potential at each point
     A = set_matrix(n, h, potential);
@@ -43,12 +44,21 @@ int main()
     R.save("R.txt", raw_ascii);
     A.save("D.txt", raw_ascii);
     vec eigenvalues = diagvec(A);           // Extracting the eigenvalues of the system from the diagonalised matrix
+    uvec indices = find(eigenvalues <= 11 ); // Finding the indices of the three lowest eigenvalues in unordered array
+    cout << "Indices of the three smallest eigenvalues in random order:" << endl;
+    cout << indices << endl;
+    cout << "Corresponding eigenvalues:" << endl;
+    cout << eigenvalues(indices(0)) << endl;
+    cout << eigenvalues(indices(1)) << endl;
+    cout << eigenvalues(indices(2))<< endl << endl;
+
     eigenvalues = sort(eigenvalues);        // Sorting the eigenvalues
+
     eigenvalues.save("eigenvalues.txt", raw_ascii);
     cout << eigenvalues.subvec(0,2) << endl;// Cout to keep track of the values without having to open file
 
     return 0;
-
+ 
 } // End of program
 
 void create_rho_and_potential(int n, double h, double rho_min,  vec &rho, vec &potential){
