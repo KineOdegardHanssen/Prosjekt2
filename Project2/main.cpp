@@ -25,9 +25,14 @@ int main()
     rho_min = 0.;
     cout << "Read in maximum value of dimensionless radius: ";
     cin >> rho_max;
+/*
     cout << "Read in matrix dimension: ";
     cin >> n;
     h = (rho_max-rho_min)/(n+1);            // Step size for radius vector
+*/
+    h = 0.015;                              // Pre-decided step size
+    n = floor(rho_max/h - 1);               // Matrix dimension
+    cout << "Matrix dimension: " << n << endl;
 
     // Defining vectors and matrices
     mat A;                                  // The Matrix with a large M which we are solving
